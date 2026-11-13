@@ -1,0 +1,45 @@
+{
+  "name": "@civ-clone/base-unit-lifecycle",
+  "version": "0.1.0",
+  "description": "Building blocks for a ruleset's unit lifecycle rules: what happens when a unit is created, activated, moved, stowed aboard a transport, halted, defeated, destroyed, lost at sea or left unsupported, and which of a player's units can take orders. The ruleset keeps its own rules, ids and order, and builds their criteria and effects from these.",
+  "repository": "git@github.com:civ-clone/base-unit-lifecycle.git",
+  "keywords": [
+    "typescript",
+    "civilization"
+  ],
+  "author": "dom111 <dom111@users.noreply.github.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "build": "npm run ts:compile && npm run prettier:format",
+    "prettier:check": "prettier --config .prettierrc --check '**/*.ts'",
+    "prettier:format": "prettier --config .prettierrc '**/*.ts' --write",
+    "test": "ts-mocha ./tests/*.test.ts",
+    "ts:compile": "tsc --build tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.0",
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^16.0.0",
+    "chai": "^4.0.0",
+    "mocha": "^10.0.0",
+    "prettier": "^2.8.8",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.0.0"
+  },
+  "dependencies": {
+    "@civ-clone/base-unit-action-embark": "^0.1.0",
+    "@civ-clone/base-unit-action-rules": "^0.1.5",
+    "@civ-clone/base-unit-action-sleep": "^0.1.0",
+    "@civ-clone/base-unit-trait-carries": "^0.1.0",
+    "@civ-clone/core-city": "^0.1.19",
+    "@civ-clone/core-engine": "^0.1.0",
+    "@civ-clone/core-player": "^0.1.0",
+    "@civ-clone/core-rule": "^0.1.9",
+    "@civ-clone/core-terrain": "^0.1.0",
+    "@civ-clone/core-unit": "^0.1.31",
+    "@civ-clone/core-unit-improvement": "^0.1.0",
+    "@civ-clone/core-unit-transport": "^0.1.8",
+    "@civ-clone/core-world": "^0.1.0"
+  }
+}
