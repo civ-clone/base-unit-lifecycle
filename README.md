@@ -44,6 +44,7 @@ returns the rules with ids `<prefix>:unit/<type>/<name>`, the same names and ord
 - `lib/movedRules`: `movedRules(prefix, deps, options)`, the `Moved` rules: cargo, collecting, taking off, a
   `CoastBound` unit lost at sea, `AttackEndsTurn`, and a broken peace treaty.
 - `lib/detonatedRules`: `detonatedRules(prefix, deps, options)`, what a nuclear detonation does to the 9 squares.
+- `lib/diplomatRules`: `diplomatRules(prefix, deps)`, the embassy, investigation and leader-meeting rules.
 - `lib/treatyPartner`: `treatyPartner(improvements, deps)`, a `partnerOf` for `impassable` and the treaty actions: the
   partner working an improved tile.
 

@@ -29,7 +29,10 @@
   },
   "dependencies": {
     "@civ-clone/base-unit-action-embark": "^0.1.0",
+    "@civ-clone/base-unit-action-establish-embassy": "^0.1.0",
     "@civ-clone/base-unit-action-goto": "^0.1.8",
+    "@civ-clone/base-unit-action-investigate-city": "^0.1.0",
+    "@civ-clone/base-unit-action-meet-with-leader": "^0.1.0",
     "@civ-clone/base-unit-action-nuclear-attack": "^0.1.0",
     "@civ-clone/base-unit-action-rules": "^0.1.5",
     "@civ-clone/base-unit-action-sleep": "^0.1.0",
@@ -49,6 +52,7 @@
     "@civ-clone/core-rule": "^0.1.9",
     "@civ-clone/core-terrain": "^0.1.0",
     "@civ-clone/core-tile-improvement": "^0.1.0",
+    "@civ-clone/core-turn-based-game": "^0.1.0",
     "@civ-clone/core-unit": "^0.1.31",
     "@civ-clone/core-unit-improvement": "^0.1.0",
     "@civ-clone/core-unit-transport": "^0.1.8",

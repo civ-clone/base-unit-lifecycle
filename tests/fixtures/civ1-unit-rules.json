@@ -76,5 +76,14 @@
     ["civ1-unit:unit/detonated/destroy-units", "Detonated", 2000, 0],
     ["civ1-unit:unit/detonated/halve-cities", "Detonated", 2500, 0],
     ["civ1-unit:unit/detonated/fallout", "Detonated", 3000, 0]
+  ],
+  "Rules/Unit/diplomat": [
+    ["civ1-unit:unit/embassy-established/register", "EmbassyEstablished", 2000, 0],
+    ["civ1-unit:unit/city-investigated/emit", "CityInvestigated", 2000, 0],
+    ["civ1-unit:unit/leader-met/meet", "LeaderMet", 2000, 0],
+    ["civ1-unit:unit/technology-stolen/steal", "TechnologyStolen", 2000, 0],
+    ["civ1-unit:unit/city-sabotaged/sabotage", "CitySabotaged", 2000, 0],
+    ["civ1-unit:unit/revolt-incited/capture", "RevoltIncited", 2000, 0],
+    ["civ1-unit:unit/unit-bribed/transfer", "UnitBribed", 2000, 0]
   ]
 }

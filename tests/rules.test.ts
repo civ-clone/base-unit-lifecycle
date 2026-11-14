@@ -13,6 +13,7 @@ import TileImprovement from '@civ-clone/core-tile-improvement/TileImprovement';
 import Unit from '@civ-clone/core-unit/Unit';
 import UnitImprovement from '@civ-clone/core-unit-improvement/UnitImprovement';
 import detonatedRules from '../lib/detonatedRules';
+import diplomatRules from '../lib/diplomatRules';
 import { expect } from 'chai';
 import lifecycleRules from '../lib/lifecycleRules';
 import movedRules from '../lib/movedRules';
@@ -304,5 +305,50 @@ describe('treatyPartner', (): void => {
     expect(partnerOf(road, false)(unit(true), tile)).to.null;
     expect(partnerOf(road)(unit(false), tile)).to.null;
     expect(partnerOf(road)(unit(true, Air), tile)).to.null;
+  });
+});
+
+describe('diplomatRules', (): void => {
+  it("gives civ1-unit's embassy, investigation and meeting rules, which come first in its Rules/Unit/diplomat", (): void => {
+    const rules = diplomatRules('civ1-unit', {});
+
+    expect(
+      fingerprint([
+        ...rules.embassyEstablished,
+        ...rules.cityInvestigated,
+        ...rules.leaderMet,
+      ])
+    ).to.deep.equal(civ1['Rules/Unit/diplomat'].slice(0, 3));
+  });
+
+  it("registers an embassy for the Diplomat's player, and a meeting ends its turn", (): void => {
+    const registered: unknown[] = [],
+      events: string[] = [],
+      me = {},
+      them = {},
+      rules = diplomatRules('game', {
+        engine: { emit: (event: string) => events.push(event) } as never,
+        interactionRegistry: {
+          register: (interaction: unknown) => registered.push(interaction),
+        } as never,
+      });
+    let moves = 1;
+    const unit = {
+      player: () => me,
+      moves: () => ({ set: (value: number) => (moves = value) }),
+    };
+
+    rules.embassyEstablished[0].process(unit, { player: () => them });
+    rules.leaderMet[0].process(unit, them);
+
+    expect(registered).to.length(1);
+    const [embassy] = registered as { holder(): unknown; host(): unknown }[];
+
+    expect([embassy.holder(), embassy.host()]).to.deep.equal([me, them]);
+    expect(moves).to.equal(0);
+    expect(events).to.deep.equal([
+      'player:embassy-established',
+      'player:meet-with-leader',
+    ]);
   });
 });
