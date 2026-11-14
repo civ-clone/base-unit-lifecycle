@@ -364,9 +364,8 @@ describe('lifecycleRules, a short step of the ruleset’s own', (): void => {
           InactiveUnit: InactiveUnit as never,
           removedOnActivate: [],
           stowable: [],
-          shortfallFactor: 0.5,
           shortStep: {
-            succeeds: (remaining, movement, cost, rng) => {
+            succeeds: (unit, remaining, movement, cost, rng) => {
               calls.push([remaining, movement, cost, rng()]);
 
               return remaining === movement;
@@ -395,6 +394,7 @@ describe('lifecycleRules, a short step of the ruleset’s own', (): void => {
 
 describe('detonatedRules, vetoed', (): void => {
   it('does nothing over a square the ruleset vetoes, but still tells the client', (): void => {
+    let asked = 0;
     const events: string[] = [],
       touched: string[] = [],
       rules = detonatedRules(
@@ -415,7 +415,11 @@ describe('detonatedRules, vetoed', (): void => {
           sparesUnits: () => false,
           Pollution: Pollution as never,
           falloutChance: 1,
-          vetoes: () => true,
+          vetoes: () => {
+            asked++;
+
+            return true;
+          },
         }
       ),
       tile = { getNeighbours: () => [], isLand: () => true },
@@ -425,5 +429,6 @@ describe('detonatedRules, vetoed', (): void => {
 
     expect(events).to.deep.equal(['unit:nuclear-detonation']);
     expect(touched).to.deep.equal([]);
+    expect(asked).to.equal(1);
   });
 });

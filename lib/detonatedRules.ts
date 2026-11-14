@@ -96,8 +96,11 @@ export const detonatedRules = (
 ): Detonated[] => {
   const id = (name: string): string => `${prefix}:unit/detonated/${name}`,
     area = (tile: Tile): Tile[] => [tile, ...tile.getNeighbours()],
+    // `vetoes` is asked once per detonation, by `emit` (which runs first, `High`), and the answer is kept for the
+    //  three rules after it, so destroying the units can't change it halfway. Without `vetoes`, nothing is kept or asked.
+    vetoed = new WeakMap<Unit, boolean>(),
     stopped = (unit: Unit, tile: Tile): boolean =>
-      vetoes !== undefined && vetoes(unit, tile);
+      vetoes !== undefined && (vetoed.get(unit) ?? vetoes(unit, tile));
 
   return [
     new Detonated(
@@ -105,6 +108,10 @@ export const detonatedRules = (
       id('emit'),
       new High(),
       new Effect((unit: Unit, tile: Tile): void => {
+        if (vetoes !== undefined) {
+          vetoed.set(unit, vetoes(unit, tile));
+        }
+
         engine.emit('unit:nuclear-detonation', unit, tile);
       })
     ),

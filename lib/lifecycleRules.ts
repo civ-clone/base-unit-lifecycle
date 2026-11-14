@@ -113,7 +113,7 @@ export interface LifecycleDependencies {
   unitRegistry?: UnitRegistry;
 }
 
-export interface LifecycleOptions {
+export interface LifecycleBaseOptions {
   // The player actions a unit that can take orders, and one that can't, is offered as.
   ActiveUnit: UnitPlayerActionType<PlayerAction>;
   InactiveUnit: UnitPlayerActionType<PlayerAction>;
@@ -123,16 +123,26 @@ export interface LifecycleOptions {
   stowable: (typeof Unit)[];
   // Whose land `tile` is among `unit`'s treaty partners, or `null`: routes go round it. Without it, no rule is made.
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
-  // How far short of a step's cost a unit may be and still try it (`spendShort`).
-  shortfallFactor: number;
-  // A ruleset's own short step, in place of `shortfallFactor`'s: whether a unit with `remaining` of its `movement`
-  //  moves gets onto a square costing `cost` (one draw of `randomNumberGenerator` at most), and what such a step is
-  //  worth on average to route planning. The unit's moves are spent either way.
-  shortStep?: ShortStep;
 }
 
+/**
+ * How a unit short of a step's moves fares: Civ1's `shortfallFactor` (`spendShort`), or a ruleset's own `shortStep`,
+ *  which then needs no factor.
+ */
+export type LifecycleOptions = LifecycleBaseOptions &
+  (
+    | { shortfallFactor: number; shortStep?: undefined }
+    | { shortfallFactor?: number; shortStep: ShortStep }
+  );
+
+/**
+ * A ruleset's own short step: whether `unit`, with `remaining` of its `movement` moves, gets onto a square costing
+ *  `cost` (one draw of `randomNumberGenerator` at most), and what such a step is worth on average to route planning.
+ *  The unit's moves are spent either way.
+ */
 export interface ShortStep {
   succeeds: (
+    unit: Unit,
     remaining: number,
     movement: number,
     cost: number,
@@ -267,7 +277,7 @@ export const lifecycleRules = (
         new Effect(
           (unit: Unit, movementCost: number, movement: number): number =>
             shortStep === undefined
-              ? expectedCost(movement, movementCost, shortfallFactor)
+              ? expectedCost(movement, movementCost, shortfallFactor as number)
               : shortStep.expectedCost(movement, movementCost)
         )
       ),
@@ -342,7 +352,7 @@ export const lifecycleRules = (
         new Criterion(shortOfMovesFor),
         new Effect(
           shortStep === undefined
-            ? spendShort(shortfallFactor, randomNumberGenerator)
+            ? spendShort(shortfallFactor as number, randomNumberGenerator)
             : (unit: Unit, movementCost: number): boolean => {
                 const remaining = unit.moves().value(),
                   movement = unit.movement().value();
@@ -350,6 +360,7 @@ export const lifecycleRules = (
                 unit.moves().set(0);
 
                 return shortStep.succeeds(
+                  unit,
                   remaining,
                   movement,
                   movementCost,

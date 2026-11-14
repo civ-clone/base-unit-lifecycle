@@ -35,17 +35,36 @@ export interface LifecycleDependencies {
   unitLossRegistry?: UnitLossRegistry;
   unitRegistry?: UnitRegistry;
 }
-export interface LifecycleOptions {
+export interface LifecycleBaseOptions {
   ActiveUnit: UnitPlayerActionType<PlayerAction>;
   InactiveUnit: UnitPlayerActionType<PlayerAction>;
   removedOnActivate: (typeof UnitImprovement)[];
   stowable: (typeof Unit)[];
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
-  shortfallFactor: number;
-  shortStep?: ShortStep;
 }
+/**
+ * How a unit short of a step's moves fares: Civ1's `shortfallFactor` (`spendShort`), or a ruleset's own `shortStep`,
+ *  which then needs no factor.
+ */
+export type LifecycleOptions = LifecycleBaseOptions &
+  (
+    | {
+        shortfallFactor: number;
+        shortStep?: undefined;
+      }
+    | {
+        shortfallFactor?: number;
+        shortStep: ShortStep;
+      }
+  );
+/**
+ * A ruleset's own short step: whether `unit`, with `remaining` of its `movement` moves, gets onto a square costing
+ *  `cost` (one draw of `randomNumberGenerator` at most), and what such a step is worth on average to route planning.
+ *  The unit's moves are spent either way.
+ */
 export interface ShortStep {
   succeeds: (
+    unit: Unit,
     remaining: number,
     movement: number,
     cost: number,
