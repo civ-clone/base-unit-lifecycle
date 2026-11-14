@@ -1,0 +1,89 @@
+{
+  "Rules/Unit/activate": [
+    ["civ1-unit:unit/activate/has-moves", "Activate", 2000, 1],
+    ["civ1-unit:unit/activate/clear-busy", "Activate", 2000, 1],
+    ["civ1-unit:unit/activate/remove-improvement/Fortified", "Activate", 2000, 1]
+  ],
+  "Rules/Unit/canStow": [
+    ["civ1-unit:unit/can-stow/Land", "CanStow", 2000, 1],
+    ["civ1-unit:unit/can-stow/Air", "CanStow", 2000, 1]
+  ],
+  "Rules/Unit/created": [
+    ["civ1-unit:unit/created/register", "Created", 2000, 0],
+    ["civ1-unit:unit/created/apply-visibility", "Created", 2000, 0],
+    ["civ1-unit:unit/created/set-moves", "Created", 2000, 0],
+    ["civ1-unit:unit/created/emit", "Created", 2000, 0]
+  ],
+  "Rules/Unit/defeated": [
+    ["civ1-unit:unit/defeated/emit-and-destroy", "Defeated", 2000, 0],
+    ["civ1-unit:unit/defeated/destroy-stack", "Defeated", 2000, 3]
+  ],
+  "Rules/Unit/destroyed": [
+    ["civ1-unit:unit/destroyed/emit", "Destroyed", 2000, 0],
+    ["civ1-unit:unit/destroyed/count-loss", "Destroyed", 2000, 2],
+    ["civ1-unit:unit/destroyed/deactivate", "Destroyed", 2000, 0],
+    ["civ1-unit:unit/destroyed/remove-improvements", "Destroyed", 2000, 0],
+    ["civ1-unit:unit/destroyed/lose-cargo", "Destroyed", 2000, 1],
+    ["civ1-unit:unit/destroyed/leave-transport", "Destroyed", 2000, 1]
+  ],
+  "Rules/Unit/expectedMovementCost": [
+    ["civ1-unit:unit/expected-movement-cost/shortfall", "ExpectedMovementCost", 2000, 1]
+  ],
+  "Rules/Unit/halted": [
+    ["civ1-unit:unit/halted/emit", "Halted", 2000, 0]
+  ],
+  "Rules/Unit/impassable": [
+    ["civ1-unit:unit/impassable/treaty-partners-land", "Impassable", 2000, 2]
+  ],
+  "Rules/Unit/lostAtSea": [
+    ["civ1-unit:unit/lost-at-sea/emit", "LostAtSea", 2000, 0],
+    ["civ1-unit:unit/lost-at-sea/count-loss", "LostAtSea", 2000, 0],
+    ["civ1-unit:unit/lost-at-sea/destroy", "LostAtSea", 2000, 0]
+  ],
+  "Rules/Player/action": [
+    ["civ1-unit:player/action/active-units", "Action", 2000, 1],
+    ["civ1-unit:player/action/inactive-units", "Action", 2000, 1]
+  ],
+  "Rules/Unit/stowed": [
+    ["civ1-unit:unit/stowed/sleep", "Stowed", 2000, 0]
+  ],
+  "Rules/Unit/transferred": [
+    ["civ1-unit:unit/transferred/start-afresh", "Transferred", 2000, 0],
+    ["civ1-unit:unit/transferred/emit", "Transferred", 2000, 0]
+  ],
+  "Rules/Unit/unsupported": [
+    ["civ1-unit:unit/unsupported/emit", "Unsupported", 2000, 0]
+  ],
+  "Rules/Unit/validateMove": [
+    ["civ1-unit:unit/validate-move/enough-moves", "ValidateMove", 2000, 1],
+    ["civ1-unit:unit/validate-move/not-enough-moves", "ValidateMove", 2000, 1]
+  ],
+  "Rules/Unit/moved": [
+    ["civ1-unit:unit/moved/emit", "Moved", 2000, 0],
+    ["civ1-unit:unit/moved/apply-visibility", "Moved", 2000, 0],
+    ["civ1-unit:unit/moved/end-moves-when-exhausted", "Moved", 2000, 1],
+    ["civ1-unit:unit/moved/move-cargo", "Moved", 2000, 3],
+    ["civ1-unit:unit/moved/collect-aircraft", "Moved", 2000, 4],
+    ["civ1-unit:unit/moved/collect-sleeping", "Moved", 2000, 4],
+    ["civ1-unit:unit/moved/disembark", "Moved", 2000, 1],
+    ["civ1-unit:unit/moved/take-off", "Moved", 2000, 4],
+    ["civ1-unit:unit/moved/trireme-lost-at-sea", "Moved", 2000, 4],
+    ["civ1-unit:unit/moved/bomber/end-turn-after-attack", "Moved", 1000, 2],
+    ["civ1-unit:unit/moved/break-peace-treaty", "Moved", 2000, 1]
+  ],
+  "Rules/Unit/detonated": [
+    ["civ1-unit:unit/detonated/emit", "Detonated", 1000, 0],
+    ["civ1-unit:unit/detonated/destroy-units", "Detonated", 2000, 0],
+    ["civ1-unit:unit/detonated/halve-cities", "Detonated", 2500, 0],
+    ["civ1-unit:unit/detonated/fallout", "Detonated", 3000, 0]
+  ],
+  "Rules/Unit/diplomat": [
+    ["civ1-unit:unit/embassy-established/register", "EmbassyEstablished", 2000, 0],
+    ["civ1-unit:unit/city-investigated/emit", "CityInvestigated", 2000, 0],
+    ["civ1-unit:unit/leader-met/meet", "LeaderMet", 2000, 0],
+    ["civ1-unit:unit/technology-stolen/steal", "TechnologyStolen", 2000, 0],
+    ["civ1-unit:unit/city-sabotaged/sabotage", "CitySabotaged", 2000, 0],
+    ["civ1-unit:unit/revolt-incited/capture", "RevoltIncited", 2000, 0],
+    ["civ1-unit:unit/unit-bribed/transfer", "UnitBribed", 2000, 0]
+  ]
+}
