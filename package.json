@@ -1,6 +1,6 @@
 {
   "name": "@civ-clone/base-unit-lifecycle",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Building blocks for a ruleset's unit lifecycle rules: what happens when a unit is created, activated, moved, stowed aboard a transport, halted, defeated, destroyed, lost at sea or left unsupported, and which of a player's units can take orders. The ruleset keeps its own rules, ids and order, and builds their criteria and effects from these.",
   "repository": "git@github.com:civ-clone/base-unit-lifecycle.git",
   "keywords": [
