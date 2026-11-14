@@ -125,6 +125,20 @@ export interface LifecycleOptions {
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
   // How far short of a step's cost a unit may be and still try it (`spendShort`).
   shortfallFactor: number;
+  // A ruleset's own short step, in place of `shortfallFactor`'s: whether a unit with `remaining` of its `movement`
+  //  moves gets onto a square costing `cost` (one draw of `randomNumberGenerator` at most), and what such a step is
+  //  worth on average to route planning. The unit's moves are spent either way.
+  shortStep?: ShortStep;
+}
+
+export interface ShortStep {
+  succeeds: (
+    remaining: number,
+    movement: number,
+    cost: number,
+    randomNumberGenerator: () => number
+  ) => boolean;
+  expectedCost: (movement: number, cost: number) => number;
 }
 
 /**
@@ -151,6 +165,7 @@ export const lifecycleRules = (
     stowable,
     partnerOf,
     shortfallFactor,
+    shortStep,
   }: LifecycleOptions
 ) => {
   const id = (name: string): string => `${prefix}:unit/${name}`;
@@ -251,7 +266,9 @@ export const lifecycleRules = (
         ),
         new Effect(
           (unit: Unit, movementCost: number, movement: number): number =>
-            expectedCost(movement, movementCost, shortfallFactor)
+            shortStep === undefined
+              ? expectedCost(movement, movementCost, shortfallFactor)
+              : shortStep.expectedCost(movement, movementCost)
         )
       ),
     ],
@@ -323,7 +340,23 @@ export const lifecycleRules = (
       new ValidateMove(
         id('validate-move/not-enough-moves'),
         new Criterion(shortOfMovesFor),
-        new Effect(spendShort(shortfallFactor, randomNumberGenerator))
+        new Effect(
+          shortStep === undefined
+            ? spendShort(shortfallFactor, randomNumberGenerator)
+            : (unit: Unit, movementCost: number): boolean => {
+                const remaining = unit.moves().value(),
+                  movement = unit.movement().value();
+
+                unit.moves().set(0);
+
+                return shortStep.succeeds(
+                  remaining,
+                  movement,
+                  movementCost,
+                  randomNumberGenerator
+                );
+              }
+        )
       ),
     ],
   };

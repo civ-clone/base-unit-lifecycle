@@ -42,6 +42,16 @@ export interface LifecycleOptions {
   stowable: (typeof Unit)[];
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
   shortfallFactor: number;
+  shortStep?: ShortStep;
+}
+export interface ShortStep {
+  succeeds: (
+    remaining: number,
+    movement: number,
+    cost: number,
+    randomNumberGenerator: () => number
+  ) => boolean;
+  expectedCost: (movement: number, cost: number) => number;
 }
 /**
  * A ruleset's unit lifecycle rules, by the rule type they are, in the order each type's rules run. Their ids are
@@ -67,6 +77,7 @@ export declare const lifecycleRules: (
     stowable,
     partnerOf,
     shortfallFactor,
+    shortStep,
   }: LifecycleOptions
 ) => {
   activate: Activate[];

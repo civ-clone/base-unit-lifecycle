@@ -352,3 +352,78 @@ describe('diplomatRules', (): void => {
     ]);
   });
 });
+
+describe('lifecycleRules, a short step of the ruleset’s own', (): void => {
+  it('decides a short step and prices it with `shortStep`, spending the moves', (): void => {
+    const calls: unknown[][] = [],
+      rules = lifecycleRules(
+        'game',
+        { randomNumberGenerator: (): number => 0.25 },
+        {
+          ActiveUnit: ActiveUnit as never,
+          InactiveUnit: InactiveUnit as never,
+          removedOnActivate: [],
+          stowable: [],
+          shortfallFactor: 0.5,
+          shortStep: {
+            succeeds: (remaining, movement, cost, rng) => {
+              calls.push([remaining, movement, cost, rng()]);
+
+              return remaining === movement;
+            },
+            expectedCost: (movement: number) => movement,
+          },
+        }
+      ),
+      [, short] = rules.validateMove,
+      [expected] = rules.expectedMovementCost;
+    let moves = 1;
+    const unit = {
+      moves: () => ({
+        value: () => moves,
+        set: (value: number) => (moves = value),
+      }),
+      movement: () => ({ value: () => 1 }),
+    };
+
+    expect(short.process(unit, 3)).to.true;
+    expect(moves).to.equal(0);
+    expect(calls).to.deep.equal([[1, 1, 3, 0.25]]);
+    expect(expected.process(null, 20, 3)).to.equal(3);
+  });
+});
+
+describe('detonatedRules, vetoed', (): void => {
+  it('does nothing over a square the ruleset vetoes, but still tells the client', (): void => {
+    const events: string[] = [],
+      touched: string[] = [],
+      rules = detonatedRules(
+        'game',
+        {
+          cityRegistry: {
+            getByTile: () => {
+              touched.push('city');
+
+              return null;
+            },
+          } as never,
+          engine: { emit: (event: string) => events.push(event) } as never,
+          unitRegistry: { getByTile: () => [] } as never,
+          tileImprovementRegistry: { getByTile: () => [] } as never,
+        },
+        {
+          sparesUnits: () => false,
+          Pollution: Pollution as never,
+          falloutChance: 1,
+          vetoes: () => true,
+        }
+      ),
+      tile = { getNeighbours: () => [], isLand: () => true },
+      attacker = { player: () => null };
+
+    rules.forEach((rule) => rule.process(attacker, tile));
+
+    expect(events).to.deep.equal(['unit:nuclear-detonation']);
+    expect(touched).to.deep.equal([]);
+  });
+});

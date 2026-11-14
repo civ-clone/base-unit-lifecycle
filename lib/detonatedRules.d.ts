@@ -31,6 +31,7 @@ export interface DetonatedDependencies {
 }
 export interface DetonatedOptions {
   sparesUnits: (city: City) => boolean;
+  vetoes?: (unit: Unit, tile: Tile) => boolean;
   Pollution: new (tile: Tile, ruleRegistry: RuleRegistry) => TileImprovement;
   falloutChance: number;
 }
@@ -50,6 +51,6 @@ export declare const detonatedRules: (
     tileImprovementRegistry,
     unitRegistry,
   }: DetonatedDependencies,
-  { sparesUnits, Pollution, falloutChance }: DetonatedOptions
+  { sparesUnits, Pollution, falloutChance, vetoes }: DetonatedOptions
 ) => Detonated[];
 export default detonatedRules;

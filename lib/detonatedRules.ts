@@ -65,8 +65,11 @@ export interface DetonatedDependencies {
 }
 
 export interface DetonatedOptions {
-  // Whether the units in `city` are spared (an SDI Defense).
+  // Whether the units in `city` are spared (Civ1's SDI Defense: the city is still halved and the land falls out).
   sparesUnits: (city: City) => boolean;
+  // Whether nothing happens at all over `tile` (Civ2's SDI Defense stops the whole attack). Without it, every
+  //  detonation goes off. Asked once per rule, by the destroy, halve and fallout rules; the client is told either way.
+  vetoes?: (unit: Unit, tile: Tile) => boolean;
   // The fallout a detonation leaves on land.
   Pollution: new (tile: Tile, ruleRegistry: RuleRegistry) => TileImprovement;
   // The chance each land square in the area without a city or fallout gets some.
@@ -89,10 +92,12 @@ export const detonatedRules = (
     tileImprovementRegistry = tileImprovementRegistryInstance,
     unitRegistry = unitRegistryInstance,
   }: DetonatedDependencies,
-  { sparesUnits, Pollution, falloutChance }: DetonatedOptions
+  { sparesUnits, Pollution, falloutChance, vetoes }: DetonatedOptions
 ): Detonated[] => {
   const id = (name: string): string => `${prefix}:unit/detonated/${name}`,
-    area = (tile: Tile): Tile[] => [tile, ...tile.getNeighbours()];
+    area = (tile: Tile): Tile[] => [tile, ...tile.getNeighbours()],
+    stopped = (unit: Unit, tile: Tile): boolean =>
+      vetoes !== undefined && vetoes(unit, tile);
 
   return [
     new Detonated(
@@ -107,24 +112,28 @@ export const detonatedRules = (
     new Detonated(
       id('destroy-units'),
       new Effect((unit: Unit, tile: Tile): void =>
-        area(tile).forEach((areaTile: Tile): void => {
-          const city = cityRegistry.getByTile(areaTile);
+        stopped(unit, tile)
+          ? undefined
+          : area(tile).forEach((areaTile: Tile): void => {
+              const city = cityRegistry.getByTile(areaTile);
 
-          if (city !== null && sparesUnits(city)) {
-            engine.emit('city:sdi-protected', city, unit);
+              if (city !== null && sparesUnits(city)) {
+                engine.emit('city:sdi-protected', city, unit);
 
-            return;
-          }
+                return;
+              }
 
-          unitRegistry.getByTile(areaTile).forEach((areaUnit: Unit): void => {
-            // Cargo is destroyed with its transport, earlier in this loop, if the transport is lost at sea.
-            if (areaUnit.destroyed()) {
-              return;
-            }
+              unitRegistry
+                .getByTile(areaTile)
+                .forEach((areaUnit: Unit): void => {
+                  // Cargo is destroyed with its transport, earlier in this loop, if the transport is lost at sea.
+                  if (areaUnit.destroyed()) {
+                    return;
+                  }
 
-            ruleRegistry.process(Destroyed, areaUnit, unit.player());
-          });
-        })
+                  ruleRegistry.process(Destroyed, areaUnit, unit.player());
+                });
+            })
       )
     ),
 
@@ -132,15 +141,17 @@ export const detonatedRules = (
       id('halve-cities'),
       new Priority(HALVE_CITIES_PRIORITY),
       new Effect((unit: Unit, tile: Tile): void =>
-        area(tile).forEach((areaTile: Tile): void => {
-          const city = cityRegistry.getByTile(areaTile);
+        stopped(unit, tile)
+          ? undefined
+          : area(tile).forEach((areaTile: Tile): void => {
+              const city = cityRegistry.getByTile(areaTile);
 
-          if (city === null) {
-            return;
-          }
+              if (city === null) {
+                return;
+              }
 
-          halveCity(city, unit, cityGrowthRegistry);
-        })
+              halveCity(city, unit, cityGrowthRegistry);
+            })
       )
     ),
 
@@ -148,26 +159,28 @@ export const detonatedRules = (
       id('fallout'),
       new Low(),
       new Effect((unit: Unit, tile: Tile): void =>
-        area(tile)
-          .filter(
-            (areaTile: Tile): boolean =>
-              areaTile.isLand() &&
-              cityRegistry.getByTile(areaTile) === null &&
-              !tileImprovementRegistry
-                .getByTile(areaTile)
-                .some(
-                  (improvement: TileImprovement): boolean =>
-                    improvement instanceof Pollution
-                )
-          )
-          .forEach((areaTile: Tile): void => {
-            if (randomNumberGenerator() >= falloutChance) {
-              return;
-            }
+        stopped(unit, tile)
+          ? undefined
+          : area(tile)
+              .filter(
+                (areaTile: Tile): boolean =>
+                  areaTile.isLand() &&
+                  cityRegistry.getByTile(areaTile) === null &&
+                  !tileImprovementRegistry
+                    .getByTile(areaTile)
+                    .some(
+                      (improvement: TileImprovement): boolean =>
+                        improvement instanceof Pollution
+                    )
+              )
+              .forEach((areaTile: Tile): void => {
+                if (randomNumberGenerator() >= falloutChance) {
+                  return;
+                }
 
-            // Building it processes `Built`, which puts it on the tile.
-            new Pollution(areaTile, ruleRegistry);
-          })
+                // Building it processes `Built`, which puts it on the tile.
+                new Pollution(areaTile, ruleRegistry);
+              })
       )
     ),
   ];
