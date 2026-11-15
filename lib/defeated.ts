@@ -3,6 +3,7 @@ import CityRegistry from '@civ-clone/core-city/CityRegistry';
 import Destroyed from '@civ-clone/core-unit/Rules/Destroyed';
 import Engine from '@civ-clone/core-engine/Engine';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
 import UnitRegistry from '@civ-clone/core-unit/UnitRegistry';
 
@@ -28,6 +29,16 @@ export const notInCity =
   (cityRegistry: CityRegistry) =>
   (unit: Unit): boolean =>
     cityRegistry.getByTile(unit.tile()) === null;
+
+// Whether the square `defender` lost on keeps the units sharing it: a ruleset's own places (a fortress, say) where only
+//  the defender is lost.
+export type SparesStack = (tile: Tile, defender: Unit) => boolean;
+
+// The square the defeated unit lost on doesn't keep its stack.
+export const notSpared =
+  (sparesStack: SparesStack) =>
+  (unit: Unit): boolean =>
+    !sparesStack(unit.tile(), unit);
 
 // Other units of the defeated unit's player share its tile.
 export const hasStack =

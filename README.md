@@ -20,7 +20,7 @@ registry, the engine or a number take it first and return the function.
 - `lib/halted`: `emitHalted(engine)` (`unit:halted`), a GoTo stopped next to its destination.
 - `lib/unsupported`: `emitUnsupported(engine)` (`unit:unsupported`).
 - `lib/defeated`: `emitAndDestroy(engine, ruleRegistry)` (`unit:defeated`, then `Destroyed`), and for a defeated
-  defender's stack, `defended`, `notInCity(cityRegistry)`, `hasStack(unitRegistry)` and
+  defender's stack, `defended`, `notInCity(cityRegistry)`, `notSpared(sparesStack)`, `hasStack(unitRegistry)` and
   `destroyStack(unitRegistry, ruleRegistry)`.
 - `lib/destroyed`: `emitDestroyed(engine)` (`unit:destroyed`); `destroyedByAnother`, `notYetDestroyed` and
   `countLoss(unitLossRegistry)` for a loss report; `deactivate`; `removeImprovements(unitImprovementRegistry)`;
@@ -55,8 +55,10 @@ returns the rules with ids `<prefix>:unit/<type>/<name>`, the same names and ord
   rule (`START_AFRESH_RULE`) before it, as it does today.
 - `HALVE_CITIES_PRIORITY` and `halveCity` now live in `lib/detonatedRules` as well as civ1-unit's `lib/nuclear`; R2b
   makes civ1-unit re-export the base ones, so there is one copy.
-- The defaults reproduce civ1-unit exactly: `shortStep` and `vetoes` are for other rulesets (Civ2's short step and SDI
-  Defense), and leaving them out changes nothing.
+- The defaults reproduce civ1-unit exactly: `shortStep`, `vetoes` and `sparesStack` are for other rulesets (Civ2's
+  short step, SDI Defense, and the squares besides a city where a stack outlives its defender), and leaving them out
+  changes nothing: `lifecycleRules`' `destroy-stack` rule only gains its `notSpared` criterion when `sparesStack` is
+  given.
 
 A library: no `main`, so it registers nothing on its own. Import what you need, for example
 `@civ-clone/base-unit-lifecycle/lib/destroyed`.

@@ -39,6 +39,7 @@ import {
   emitAndDestroy,
   hasStack,
   notInCity,
+  notSpared,
 } from '../lib/defeated';
 import { fromLand, impassable, toPartnersLand } from '../lib/impassable';
 import {
@@ -394,6 +395,25 @@ describe('defeated', (): void => {
     expect(destroyed).to.eql([
       [friend, winner],
       [friend, winner],
+    ]);
+  });
+  it('asks the ruleset whether the square spares the stack, with the square and the defender', (): void => {
+    const tile = {},
+      fort = {},
+      unit = standIn({ tile: () => tile }),
+      fortified = standIn({ tile: () => fort }),
+      asked: any[][] = [],
+      sparesStack = (square: any, defender: Unit): boolean => {
+        asked.push([square, defender]);
+
+        return square === fort;
+      };
+
+    expect(notSpared(sparesStack as any)(unit)).to.true;
+    expect(notSpared(sparesStack as any)(fortified)).to.false;
+    expect(asked).to.eql([
+      [tile, unit],
+      [fort, fortified],
     ]);
   });
 });
