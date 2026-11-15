@@ -56,8 +56,8 @@ export const halveCity = (
 
 /**
  * A `vetoes` for cities that defend the squares around them: a detonation over `tile` is stopped when a city within
- * `radius` of it (the map's own distance) `protects` it from `unit`. Civ2's SDI Defense (`radius` 3, a city of another
- * civ with SDI Defense) stops the whole attack, and the weapon is lost all the same.
+ * `radius` of it (the map's own distance) `protects` it from `unit`, such as another player's city with a missile
+ * defence. The whole attack is stopped, and the weapon is used up all the same.
  */
 export const protectedByCityWithin =
   (

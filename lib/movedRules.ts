@@ -63,25 +63,24 @@ export interface MovedOptions {
   // Actions with an enemy that end a peace treaty without a grudge (walking onto, or pillaging, the partner's land).
   noVendetta: ActionType[];
   // The chance a `CoastBound` unit that ends its move out of sight of land is lost: a number, or a function of the
-  //  unit and the tile it ended on (Civ2's odds halve with Seafaring and again with Navigation, and the Lighthouse
-  //  makes them 0). A function's chance of 0 or less draws nothing and loses nothing; a number always draws, as
-  //  civ1-unit's rule does.
+  //  unit and the tile it ended on (odds that change with the player's advances or wonders). A function's chance of 0
+  //  or less draws nothing and loses nothing; a number always draws.
   coastBoundLoss: number | CoastBoundLoss;
   // Whether a `CoastBound` unit that ends its move on `tile` is in sight of land, and so safe. By default the tile is
-  //  on the coast (`Tile#isCoast`, as civ1-unit's rule asks); `adjacentToLand` asks Civ2's question.
+  //  on the coast (`Tile#isCoast`); `adjacentToLand` is the other common test.
   nearLand?: (tile: Tile) => boolean;
 }
 
 export type CoastBoundLoss = (unit: Unit, tile: Tile) => number;
 
-// Civ2's "in sight of land" (`unit_move_dir_trireme_loss`): the tile or any of its neighbours is land. For a unit at
-//  sea that is `Tile#isCoast`; it differs only on land (a unit in a city is on land, so it is safe either way).
+// In sight of land: the tile or any of its neighbours is land. For a unit at sea that is `Tile#isCoast`; it differs
+//  only on land (a unit in a city is on land, so it is safe either way).
 export const adjacentToLand = (tile: Tile): boolean =>
   tile.isLand() ||
   tile.getNeighbours().some((neighbour: Tile): boolean => neighbour.isLand());
 
-// Whether a `CoastBound` unit ending its move on `tile` is lost, drawing from `randomNumberGenerator` as civ1-unit's
-//  rule does: one draw, lost when it is no more than the chance.
+// Whether a `CoastBound` unit ending its move on `tile` is lost: one draw from `randomNumberGenerator`, lost when it is
+//  no more than the chance.
 const lostAtSea = (
   randomNumberGenerator: () => number,
   coastBoundLoss: number | CoastBoundLoss,
