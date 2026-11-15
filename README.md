@@ -49,8 +49,10 @@ returns the rules with ids `<prefix>:unit/<type>/<name>`, the same names and ord
   land" (the same at sea).
 - `lib/detonatedRules`: `detonatedRules(prefix, deps, options)`, what a nuclear detonation does to the 9 squares.
   `sparesUnits` spares a city's units (Civ1's SDI Defense); an optional `vetoes` stops a detonation altogether, and
-  the weapon is used up all the same. `protectedByCityWithin(cityRegistry, radius, protects)` builds a `vetoes` from
-  the cities within `radius` of the target (Civ2's SDI Defense of another civ, radius 3).
+  the weapon is used up all the same. `protectedByCityWithin(cityRegistry, radius, protects, distance?)` builds a
+  `vetoes` from the cities within `radius` of the target (Civ2's SDI Defense of another civ, radius 3), measured by
+  `distance(target, cityTile)`: by default `Tile#distanceFrom`, which is straight-line on the square and staggered
+  grids, so Civ2 passes its own `map_distance`.
 - `lib/diplomatRules`: `diplomatRules(prefix, deps)`, the embassy, investigation and leader-meeting rules.
 - `lib/treatyPartner`: `treatyPartner(improvements, deps)`, a `partnerOf` for `impassable` and the treaty actions: the
   partner working an improved tile.

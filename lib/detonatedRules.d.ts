@@ -22,13 +22,16 @@ export declare const halveCity: (
 ) => void;
 /**
  * A `vetoes` for cities that defend the squares around them: a detonation over `tile` is stopped when a city within
- * `radius` of it (the map's own distance) `protects` it from `unit`, such as another player's city with a missile
- * defence. The whole attack is stopped, and the weapon is used up all the same.
+ * `radius` of it `protects` it from `unit`, such as another player's city with a missile defence. The whole attack is
+ * stopped, and the weapon is used up all the same. `distance` measures from the target to a city: by default the map's
+ * own `Tile#distanceFrom` (straight-line on the square and staggered grids), or the ruleset's own measure, such as a
+ * count of moves.
  */
 export declare const protectedByCityWithin: (
   cityRegistry: CityRegistry,
   radius: number,
-  protects: (city: City, unit: Unit) => boolean
+  protects: (city: City, unit: Unit) => boolean,
+  distance?: (from: Tile, to: Tile) => number
 ) => (unit: Unit, tile: Tile) => boolean;
 export interface DetonatedDependencies {
   cityGrowthRegistry?: CityGrowthRegistry;

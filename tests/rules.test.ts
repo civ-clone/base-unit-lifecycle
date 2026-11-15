@@ -338,7 +338,7 @@ describe('movedRules', (): void => {
 
 describe('detonatedRules', (): void => {
   // Civ2 (survey-units §2.1, `unit_nuclear_attack`): any SDI Defense city of another civ within distance 3 of the
-  //  target stops the attack.
+  //  target stops the attack. Civ2's distance is its own `map_distance`, which civ2 passes as `distance`.
   it('is vetoed by a city within the radius that protects the target from the unit', (): void => {
     const target = {
         distanceFrom: (tile: { at: number }): number => tile.at,
@@ -369,6 +369,37 @@ describe('detonatedRules', (): void => {
 
     cities.push(city(3, true, 'them'));
     expect(vetoes(unit, target)).to.true;
+  });
+
+  it("measures with the ruleset's own distance when given one", (): void => {
+    const asked: unknown[][] = [],
+      target = {
+        distanceFrom: (): number => {
+          throw new Error('the default distance was used');
+        },
+      } as unknown as Tile,
+      near = { name: 'near' },
+      far = { name: 'far' },
+      city = (tile: unknown) => ({ tile: () => tile }),
+      cities = [city(far)],
+      // As Civ2's `map_distance` might put a city 3 moves away that straight-line distance puts further.
+      distance = (from: Tile, to: Tile): number => {
+        asked.push([from, to]);
+
+        return to === (near as unknown) ? 3 : 4;
+      },
+      vetoes = protectedByCityWithin(
+        { entries: () => cities } as never,
+        3,
+        (): boolean => true,
+        distance
+      ),
+      unit = {} as Unit;
+
+    expect(vetoes(unit, target)).to.false;
+    cities.push(city(near));
+    expect(vetoes(unit, target)).to.true;
+    expect(asked[0]).to.deep.equal([target, far]);
   });
 
   it("gives civ1-unit's Rules/Unit/detonated rules, in order", (): void => {
