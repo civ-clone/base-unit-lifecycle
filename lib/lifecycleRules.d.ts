@@ -6,6 +6,7 @@ import { UnitImprovementRegistry } from '@civ-clone/core-unit-improvement/UnitIm
 import { UnitLossRegistry } from '@civ-clone/core-unit/UnitLossRegistry';
 import { UnitPlayerActionType } from './playerAction';
 import { UnitRegistry } from '@civ-clone/core-unit/UnitRegistry';
+import { SparesStack } from './defeated';
 import Action from '@civ-clone/core-player/Rules/Action';
 import Activate from '@civ-clone/core-unit/Rules/Activate';
 import CanStow from '@civ-clone/core-unit-transport/Rules/CanStow';
@@ -41,6 +42,7 @@ export interface LifecycleBaseOptions {
   removedOnActivate: (typeof UnitImprovement)[];
   stowable: (typeof Unit)[];
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
+  sparesStack?: SparesStack;
 }
 /**
  * How a unit short of a step's moves fares: Civ1's `shortfallFactor` (`spendShort`), or a ruleset's own `shortStep`,
@@ -97,6 +99,7 @@ export declare const lifecycleRules: (
     partnerOf,
     shortfallFactor,
     shortStep,
+    sparesStack,
   }: LifecycleOptions
 ) => {
   activate: Activate[];

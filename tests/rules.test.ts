@@ -115,6 +115,56 @@ describe('lifecycleRules', (): void => {
     expect(rules.activate).to.length(2);
   });
 
+  it('spares the stack where sparesStack says so, with one criterion more, and only then', (): void => {
+    const city = {},
+      fort = {},
+      open = {},
+      cityRegistry = {
+        getByTile: (tile: any) => (tile === city ? {} : null),
+      } as any,
+      units = new Map<any, Unit[]>(),
+      unitRegistry = {
+        getByTile: (tile: any): Unit[] => units.get(tile) ?? [],
+      } as any,
+      player = {},
+      by = { player: () => ({}) } as unknown as Unit,
+      defender = (tile: any): Unit => {
+        const unit = { tile: () => tile, player: () => player } as any,
+          friend = { tile: () => tile, player: () => player } as any;
+
+        units.set(tile, [unit, friend]);
+
+        return unit;
+      },
+      destroyStackRule = (sparesStack?: (tile: Tile, unit: Unit) => boolean) =>
+        lifecycleRules(
+          'game',
+          { cityRegistry, unitRegistry },
+          {
+            ActiveUnit: ActiveUnit as never,
+            InactiveUnit: InactiveUnit as never,
+            removedOnActivate: [],
+            stowable: [],
+            shortfallFactor: 0.5,
+            sparesStack,
+          }
+        ).defeated[1],
+      plain = destroyStackRule(),
+      sparing = destroyStackRule((tile: Tile): boolean => tile === fort);
+
+    expect(fingerprint([plain])[0][3]).to.equal(3);
+    expect(fingerprint([sparing])[0][3]).to.equal(4);
+    expect(sparing.id()).to.equal(plain.id());
+
+    expect(plain.validate(defender(open), by)).to.true;
+    expect(plain.validate(defender(fort), by)).to.true;
+    expect(plain.validate(defender(city), by)).to.false;
+
+    expect(sparing.validate(defender(open), by)).to.true;
+    expect(sparing.validate(defender(fort), by)).to.false;
+    expect(sparing.validate(defender(city), by)).to.false;
+  });
+
   it('prices a long step with the given shortfall factor', (): void => {
     const [rule] = lifecycleRules(
       'game',

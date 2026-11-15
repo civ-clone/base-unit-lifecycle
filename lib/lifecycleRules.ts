@@ -62,11 +62,13 @@ import {
 } from './activate';
 import { countLosses, emitLostAtSea, sink } from './lostAtSea';
 import {
+  SparesStack,
   defended,
   destroyStack,
   emitAndDestroy,
   hasStack,
   notInCity,
+  notSpared,
 } from './defeated';
 import { fromLand, impassable, toPartnersLand } from './impassable';
 import {
@@ -123,6 +125,8 @@ export interface LifecycleBaseOptions {
   stowable: (typeof Unit)[];
   // Whose land `tile` is among `unit`'s treaty partners, or `null`: routes go round it. Without it, no rule is made.
   partnerOf?: (unit: Unit, tile: Tile) => Player | null;
+  // Squares where a defeated defender's stack survives it, besides a city. Without it, only a city spares the stack.
+  sparesStack?: SparesStack;
 }
 
 /**
@@ -176,6 +180,7 @@ export const lifecycleRules = (
     partnerOf,
     shortfallFactor,
     shortStep,
+    sparesStack,
   }: LifecycleOptions
 ) => {
   const id = (name: string): string => `${prefix}:unit/${name}`;
@@ -235,6 +240,9 @@ export const lifecycleRules = (
         id('defeated/destroy-stack'),
         new Criterion(defended),
         new Criterion(notInCity(cityRegistry)),
+        ...(sparesStack === undefined
+          ? []
+          : [new Criterion(notSpared(sparesStack))]),
         new Criterion(hasStack(unitRegistry)),
         new Effect(destroyStack(unitRegistry, ruleRegistry))
       ),

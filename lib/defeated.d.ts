@@ -2,6 +2,7 @@ import Action from '@civ-clone/core-unit/Action';
 import CityRegistry from '@civ-clone/core-city/CityRegistry';
 import Engine from '@civ-clone/core-engine/Engine';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import Tile from '@civ-clone/core-world/Tile';
 import Unit from '@civ-clone/core-unit/Unit';
 import UnitRegistry from '@civ-clone/core-unit/UnitRegistry';
 export declare const emitAndDestroy: (
@@ -15,6 +16,10 @@ export declare const defended: (
 ) => boolean;
 export declare const notInCity: (
   cityRegistry: CityRegistry
+) => (unit: Unit) => boolean;
+export type SparesStack = (tile: Tile, defender: Unit) => boolean;
+export declare const notSpared: (
+  sparesStack: SparesStack
 ) => (unit: Unit) => boolean;
 export declare const hasStack: (
   unitRegistry: UnitRegistry
