@@ -20,6 +20,16 @@ export declare const halveCity: (
   unit: Unit,
   cityGrowthRegistry?: CityGrowthRegistry
 ) => void;
+/**
+ * A `vetoes` for cities that defend the squares around them: a detonation over `tile` is stopped when a city within
+ * `radius` of it (the map's own distance) `protects` it from `unit`. Civ2's SDI Defense (`radius` 3, a city of another
+ * civ with SDI Defense) stops the whole attack, and the weapon is lost all the same.
+ */
+export declare const protectedByCityWithin: (
+  cityRegistry: CityRegistry,
+  radius: number,
+  protects: (city: City, unit: Unit) => boolean
+) => (unit: Unit, tile: Tile) => boolean;
 export interface DetonatedDependencies {
   cityGrowthRegistry?: CityGrowthRegistry;
   cityRegistry?: CityRegistry;

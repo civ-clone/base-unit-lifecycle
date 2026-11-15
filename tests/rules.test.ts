@@ -12,11 +12,11 @@ import Tile from '@civ-clone/core-world/Tile';
 import TileImprovement from '@civ-clone/core-tile-improvement/TileImprovement';
 import Unit from '@civ-clone/core-unit/Unit';
 import UnitImprovement from '@civ-clone/core-unit-improvement/UnitImprovement';
-import detonatedRules from '../lib/detonatedRules';
+import detonatedRules, { protectedByCityWithin } from '../lib/detonatedRules';
 import diplomatRules from '../lib/diplomatRules';
 import { expect } from 'chai';
 import lifecycleRules from '../lib/lifecycleRules';
-import movedRules from '../lib/movedRules';
+import movedRules, { adjacentToLand } from '../lib/movedRules';
 import treatyPartner from '../lib/treatyPartner';
 
 // civ1-unit 0.1.40's own rules (835709d), dumped from its compiled `getRules`: id, rule type, priority and how many
@@ -231,9 +231,146 @@ describe('movedRules', (): void => {
     expect(rules(0.26).validate(unit(false))).to.false;
     expect(rules(0).validate(unit(true))).to.false;
   });
+
+  // Civ2's odds (survey-units §5, `unit_move_dir_trireme_loss`): lost 1 time in N, N = 2, ×2 with Seafaring, ×2 again
+  //  with Navigation; never with the Lighthouse.
+  it("takes the odds as a function of the unit and the tile it ended on, and draws nothing when they're 0", (): void => {
+    const asked: unknown[][] = [],
+      draws: number[] = [],
+      odds = (unit: { n: number }, tile: unknown): number => {
+        asked.push([unit, tile]);
+
+        return unit.n === 0 ? 0 : 1 / unit.n;
+      },
+      rule = (draw: number) =>
+        movedRules(
+          'game',
+          {
+            randomNumberGenerator: (): number => {
+              draws.push(draw);
+
+              return draw;
+            },
+          },
+          { ...options, coastBoundLoss: odds as never }
+        ).find((rule) => rule.id()!.endsWith('/trireme-lost-at-sea'))!,
+      sea = { isCoast: (): boolean => false },
+      // N: 2 with neither advance, 4 with Seafaring, 8 with Navigation too, 0 for the Lighthouse's "never".
+      trireme = (n: number) => ({
+        n,
+        hasTrait: (Trait: unknown): boolean => Trait === CoastBound,
+        moves: () => ({ value: (): number => 0 }),
+        tile: () => sea,
+      });
+
+    expect(rule(0.5).validate(trireme(2))).to.true;
+    expect(rule(0.51).validate(trireme(2))).to.false;
+    expect(rule(0.25).validate(trireme(4))).to.true;
+    expect(rule(0.26).validate(trireme(4))).to.false;
+    expect(rule(0.125).validate(trireme(8))).to.true;
+    expect(rule(0.13).validate(trireme(8))).to.false;
+    expect(asked.every(([, tile]) => tile === sea)).to.true;
+    expect(draws).to.have.length(6);
+
+    // The Lighthouse: never lost, even on a draw of 0, and nothing is drawn.
+    expect(rule(0).validate(trireme(0))).to.false;
+    expect(draws).to.have.length(6);
+  });
+
+  it('draws once for a number, as civ1-unit does, and only for a unit out of sight of land', (): void => {
+    let draws = 0;
+
+    const rule = movedRules(
+        'game',
+        {
+          randomNumberGenerator: (): number => {
+            draws += 1;
+
+            return 0.9;
+          },
+        },
+        options
+      ).find((rule) => rule.id()!.endsWith('/trireme-lost-at-sea'))!,
+      unit = (coast: boolean) => ({
+        hasTrait: (Trait: unknown): boolean => Trait === CoastBound,
+        moves: () => ({ value: (): number => 0 }),
+        tile: () => ({ isCoast: (): boolean => coast }),
+      });
+
+    expect(rule.validate(unit(true))).to.false;
+    expect(draws).to.equal(0);
+    expect(rule.validate(unit(false))).to.false;
+    expect(draws).to.equal(1);
+  });
+
+  it('asks nearLand whether a unit is in sight of land, instead of whether its tile is on the coast', (): void => {
+    const near = new Set<unknown>(),
+      rule = movedRules(
+        'game',
+        { randomNumberGenerator: (): number => 0 },
+        { ...options, nearLand: (tile: Tile): boolean => near.has(tile) }
+      ).find((rule) => rule.id()!.endsWith('/trireme-lost-at-sea'))!,
+      // `isCoast` says otherwise each time, so only `nearLand` can decide.
+      tile = { isCoast: (): boolean => near.size === 0 },
+      unit = {
+        hasTrait: (Trait: unknown): boolean => Trait === CoastBound,
+        moves: () => ({ value: (): number => 0 }),
+        tile: () => tile,
+      };
+
+    expect(rule.validate(unit)).to.true;
+    near.add(tile);
+    expect(rule.validate(unit)).to.false;
+  });
+
+  it('is in sight of land, as Civ2 asks, on land or beside it (survey-units §5: any of the 9 tiles)', (): void => {
+    const square = (land: boolean, neighbours: boolean[] = []) =>
+      ({
+        isLand: (): boolean => land,
+        getNeighbours: () => neighbours.map((land) => square(land)),
+      } as unknown as Tile);
+
+    expect(adjacentToLand(square(true))).to.true;
+    expect(adjacentToLand(square(false, [false, false, true]))).to.true;
+    expect(adjacentToLand(square(false, Array(8).fill(false)))).to.false;
+  });
 });
 
 describe('detonatedRules', (): void => {
+  // Civ2 (survey-units §2.1, `unit_nuclear_attack`): any SDI Defense city of another civ within distance 3 of the
+  //  target stops the attack.
+  it('is vetoed by a city within the radius that protects the target from the unit', (): void => {
+    const target = {
+        distanceFrom: (tile: { at: number }): number => tile.at,
+      } as unknown as Tile,
+      city = (at: number, sdi: boolean, owner: string) => ({
+        at,
+        sdi,
+        player: () => owner,
+        tile: () => ({ at }),
+      }),
+      cities: ReturnType<typeof city>[] = [],
+      vetoes = protectedByCityWithin(
+        { entries: () => cities } as never,
+        3,
+        (city: any, unit: any): boolean =>
+          city.sdi && city.player() !== unit.player()
+      ),
+      unit = { player: () => 'us' } as unknown as Unit;
+
+    expect(vetoes(unit, target)).to.false;
+
+    cities.push(
+      city(4, true, 'them'),
+      city(2, false, 'them'),
+      city(1, true, 'us')
+    );
+    expect(vetoes(unit, target)).to.false;
+
+    cities.push(city(3, true, 'them'));
+    expect(vetoes(unit, target)).to.true;
+  });
+
   it("gives civ1-unit's Rules/Unit/detonated rules, in order", (): void => {
     expect(
       fingerprint(

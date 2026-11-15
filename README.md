@@ -42,9 +42,15 @@ returns the rules with ids `<prefix>:unit/<type>/<name>`, the same names and ord
   `defeated`, `destroyed`, `expectedMovementCost`, `halted`, `impassable`, `lostAtSea`, `playerAction`, `stowed`,
   `transferred`, `unsupported`, `validateMove`), so each list can be registered where the ruleset wants it.
 - `lib/movedRules`: `movedRules(prefix, deps, options)`, the `Moved` rules: cargo, collecting, taking off, a
-  `CoastBound` unit lost at sea, `AttackEndsTurn`, and a broken peace treaty.
+  `CoastBound` unit lost at sea, `AttackEndsTurn`, and a broken peace treaty. `coastBoundLoss` is the chance a
+  `CoastBound` unit out of sight of land is lost: a number (always one draw, as civ1-unit's rule), or a function of the
+  unit and its tile (Civ2's odds by advance and wonder; a chance of 0 draws nothing). The optional `nearLand(tile)`
+  says what is in sight of land: by default `Tile#isCoast`, or `adjacentToLand`, Civ2's "the tile or a neighbour is
+  land" (the same at sea).
 - `lib/detonatedRules`: `detonatedRules(prefix, deps, options)`, what a nuclear detonation does to the 9 squares.
-  `sparesUnits` spares a city's units (Civ1's SDI Defense); an optional `vetoes` stops a detonation altogether.
+  `sparesUnits` spares a city's units (Civ1's SDI Defense); an optional `vetoes` stops a detonation altogether, and
+  the weapon is used up all the same. `protectedByCityWithin(cityRegistry, radius, protects)` builds a `vetoes` from
+  the cities within `radius` of the target (Civ2's SDI Defense of another civ, radius 3).
 - `lib/diplomatRules`: `diplomatRules(prefix, deps)`, the embassy, investigation and leader-meeting rules.
 - `lib/treatyPartner`: `treatyPartner(improvements, deps)`, a `partnerOf` for `impassable` and the treaty actions: the
   partner working an improved tile.
