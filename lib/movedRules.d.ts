@@ -6,6 +6,8 @@ import { TransportRegistry } from '@civ-clone/core-unit-transport/TransportRegis
 import { UnitRegistry } from '@civ-clone/core-unit/UnitRegistry';
 import Action from '@civ-clone/core-unit/Action';
 import Moved from '@civ-clone/core-unit/Rules/Moved';
+import Tile from '@civ-clone/core-world/Tile';
+import Unit from '@civ-clone/core-unit/Unit';
 type ActionType = abstract new (...args: any[]) => Action;
 export interface MovedDependencies {
   cityRegistry?: CityRegistry;
@@ -21,8 +23,11 @@ export interface MovedOptions {
   Disembark: ActionType;
   attacks: ActionType[];
   noVendetta: ActionType[];
-  coastBoundLoss: number;
+  coastBoundLoss: number | CoastBoundLoss;
+  nearLand?: (tile: Tile) => boolean;
 }
+export type CoastBoundLoss = (unit: Unit, tile: Tile) => number;
+export declare const adjacentToLand: (tile: Tile) => boolean;
 /**
  * A ruleset's `Moved` rules, in order, with ids `<prefix>:unit/moved/<name>` as civ1-unit's are: telling the client,
  * vision, ending a unit's moves, transports carrying and collecting their cargo, leaving a transport, a `CoastBound`
@@ -39,6 +44,13 @@ export declare const movedRules: (
     transportRegistry,
     unitRegistry,
   }: MovedDependencies,
-  { Move, Disembark, attacks, noVendetta, coastBoundLoss }: MovedOptions
+  {
+    Move,
+    Disembark,
+    attacks,
+    noVendetta,
+    coastBoundLoss,
+    nearLand,
+  }: MovedOptions
 ) => Moved[];
 export default movedRules;

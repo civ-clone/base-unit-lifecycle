@@ -62,9 +62,39 @@ export interface MovedOptions {
   attacks: ActionType[];
   // Actions with an enemy that end a peace treaty without a grudge (walking onto, or pillaging, the partner's land).
   noVendetta: ActionType[];
-  // The chance a `CoastBound` unit that ends its move out of sight of land is lost.
-  coastBoundLoss: number;
+  // The chance a `CoastBound` unit that ends its move out of sight of land is lost: a number, or a function of the
+  //  unit and the tile it ended on (odds that change with the player's advances or wonders). A function's chance of 0
+  //  or less draws nothing and loses nothing; a number always draws.
+  coastBoundLoss: number | CoastBoundLoss;
+  // Whether a `CoastBound` unit that ends its move on `tile` is in sight of land, and so safe. By default the tile is
+  //  on the coast (`Tile#isCoast`); `adjacentToLand` is the other common test.
+  nearLand?: (tile: Tile) => boolean;
 }
+
+export type CoastBoundLoss = (unit: Unit, tile: Tile) => number;
+
+// In sight of land: the tile or any of its neighbours is land. For a unit at sea that is `Tile#isCoast`; it differs
+//  only on land (a unit in a city is on land, so it is safe either way).
+export const adjacentToLand = (tile: Tile): boolean =>
+  tile.isLand() ||
+  tile.getNeighbours().some((neighbour: Tile): boolean => neighbour.isLand());
+
+// Whether a `CoastBound` unit ending its move on `tile` is lost: one draw from `randomNumberGenerator`, lost when it is
+//  no more than the chance.
+const lostAtSea = (
+  randomNumberGenerator: () => number,
+  coastBoundLoss: number | CoastBoundLoss,
+  unit: Unit,
+  tile: Tile
+): boolean => {
+  if (typeof coastBoundLoss === 'number') {
+    return randomNumberGenerator() <= coastBoundLoss;
+  }
+
+  const chance = coastBoundLoss(unit, tile);
+
+  return chance > 0 && randomNumberGenerator() <= chance;
+};
 
 /**
  * A ruleset's `Moved` rules, in order, with ids `<prefix>:unit/moved/<name>` as civ1-unit's are: telling the client,
@@ -82,7 +112,14 @@ export const movedRules = (
     transportRegistry = transportRegistryInstance,
     unitRegistry = unitRegistryInstance,
   }: MovedDependencies,
-  { Move, Disembark, attacks, noVendetta, coastBoundLoss }: MovedOptions
+  {
+    Move,
+    Disembark,
+    attacks,
+    noVendetta,
+    coastBoundLoss,
+    nearLand = (tile: Tile): boolean => tile.isCoast(),
+  }: MovedOptions
 ): Moved[] => {
   const id = (name: string): string => `${prefix}:unit/moved/${name}`,
     // Stows each of `units` aboard `transport`, as `Embark` and `LandAircraft` do, until it is full.
@@ -239,8 +276,10 @@ export const movedRules = (
       id('trireme-lost-at-sea'),
       new Criterion((unit: Unit): boolean => unit.hasTrait(CoastBound)),
       new Criterion((unit: Unit): boolean => unit.moves().value() === 0),
-      new Criterion((unit: Unit): boolean => !unit.tile().isCoast()),
-      new Criterion((): boolean => randomNumberGenerator() <= coastBoundLoss),
+      new Criterion((unit: Unit): boolean => !nearLand(unit.tile())),
+      new Criterion((unit: Unit): boolean =>
+        lostAtSea(randomNumberGenerator, coastBoundLoss, unit, unit.tile())
+      ),
       new Effect((unit: Unit): void => {
         ruleRegistry.process(LostAtSea, unit as unknown as ITransport);
       })
