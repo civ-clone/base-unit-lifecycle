@@ -51,6 +51,10 @@ import {
   notYetDestroyed,
   removeImprovements,
 } from './destroyed';
+import {
+  Turn,
+  instance as turnInstance,
+} from '@civ-clone/core-turn-based-game/Turn';
 import { carriesDomain, carriesUnit } from './canStow';
 import {
   clearBusy,
@@ -102,7 +106,7 @@ import { emitHalted } from './halted';
 import { emitUnsupported } from './unsupported';
 import { expectedCost } from '@civ-clone/base-unit-action-rules/lib/moveShortfall';
 import { instance as rngInstance } from '@civ-clone/core-random';
-import { sleepAboard } from './stowed';
+import { sleepAboardWith } from './stowed';
 
 export interface LifecycleDependencies {
   cityRegistry?: CityRegistry;
@@ -110,6 +114,7 @@ export interface LifecycleDependencies {
   randomNumberGenerator?: () => number;
   ruleRegistry?: RuleRegistry;
   transportRegistry?: TransportRegistry;
+  turn?: Turn;
   unitImprovementRegistry?: UnitImprovementRegistry;
   unitLossRegistry?: UnitLossRegistry;
   unitRegistry?: UnitRegistry;
@@ -168,6 +173,7 @@ export const lifecycleRules = (
     randomNumberGenerator = rngInstance,
     ruleRegistry = ruleRegistryInstance,
     transportRegistry = transportRegistryInstance,
+    turn = turnInstance,
     unitImprovementRegistry = unitImprovementRegistryInstance,
     unitLossRegistry = unitLossRegistryInstance,
     unitRegistry = unitRegistryInstance,
@@ -329,7 +335,12 @@ export const lifecycleRules = (
       ),
     ],
 
-    stowed: [new Stowed(id('stowed/sleep'), new Effect(sleepAboard))],
+    stowed: [
+      new Stowed(
+        id('stowed/sleep'),
+        new Effect(sleepAboardWith(ruleRegistry, turn, unitRegistry))
+      ),
+    ],
 
     transferred: [
       new Transferred(

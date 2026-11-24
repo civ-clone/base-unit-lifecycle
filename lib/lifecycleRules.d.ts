@@ -6,6 +6,7 @@ import { UnitImprovementRegistry } from '@civ-clone/core-unit-improvement/UnitIm
 import { UnitLossRegistry } from '@civ-clone/core-unit/UnitLossRegistry';
 import { UnitPlayerActionType } from './playerAction';
 import { UnitRegistry } from '@civ-clone/core-unit/UnitRegistry';
+import { Turn } from '@civ-clone/core-turn-based-game/Turn';
 import { SparesStack } from './defeated';
 import Action from '@civ-clone/core-player/Rules/Action';
 import Activate from '@civ-clone/core-unit/Rules/Activate';
@@ -32,6 +33,7 @@ export interface LifecycleDependencies {
   randomNumberGenerator?: () => number;
   ruleRegistry?: RuleRegistry;
   transportRegistry?: TransportRegistry;
+  turn?: Turn;
   unitImprovementRegistry?: UnitImprovementRegistry;
   unitLossRegistry?: UnitLossRegistry;
   unitRegistry?: UnitRegistry;
@@ -87,6 +89,7 @@ export declare const lifecycleRules: (
     randomNumberGenerator,
     ruleRegistry,
     transportRegistry,
+    turn,
     unitImprovementRegistry,
     unitLossRegistry,
     unitRegistry,

@@ -54,6 +54,8 @@ import Effect from '@civ-clone/core-rule/Effect';
 import Engine from '@civ-clone/core-engine/Engine';
 import PlayerAction from '@civ-clone/core-player/PlayerAction';
 import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import Turn from '@civ-clone/core-turn-based-game/Turn';
+import UnitRegistry from '@civ-clone/core-unit/UnitRegistry';
 import Sleep from '@civ-clone/base-unit-action-sleep/Sleep';
 import Stowed from '@civ-clone/base-unit-action-embark/Busy/Stowed';
 import Unit from '@civ-clone/core-unit/Unit';
@@ -62,7 +64,7 @@ import { Water } from '@civ-clone/core-terrain/Types';
 import { emitHalted } from '../lib/halted';
 import { emitUnsupported } from '../lib/unsupported';
 import { expect } from 'chai';
-import { sleepAboard } from '../lib/stowed';
+import { sleepAboard, sleepAboardWith } from '../lib/stowed';
 
 // Stand-ins: only the parts of a unit, a tile and the registries each function asks for.
 
@@ -296,6 +298,23 @@ describe('stowed', (): void => {
     expect(performed[0].from()).to.equal(tile);
     expect(performed[0].to()).to.equal(tile);
     expect(performed[0].unit()).to.equal(unit);
+  });
+
+  it("builds the Sleep with the game's own rule registry, turn and unit registry", (): void => {
+    const ruleRegistry = new RuleRegistry(),
+      turn = new Turn(),
+      unitRegistry = new UnitRegistry(),
+      performed: any[] = [],
+      unit = standIn({
+        tile: () => ({} as any),
+        action: (action: any) => performed.push(action),
+      });
+
+    sleepAboardWith(ruleRegistry, turn, unitRegistry)(unit);
+
+    expect(performed[0].ruleRegistry()).to.equal(ruleRegistry);
+    expect(performed[0]._turn).to.equal(turn);
+    expect(performed[0]._unitRegistry).to.equal(unitRegistry);
   });
 });
 

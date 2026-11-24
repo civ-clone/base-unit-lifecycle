@@ -8,6 +8,9 @@ import { Peace } from '@civ-clone/library-diplomacy/Declarations';
 import Player from '@civ-clone/core-player/Player';
 import PlayerAction from '@civ-clone/core-player/PlayerAction';
 import Rule from '@civ-clone/core-rule/Rule';
+import RuleRegistry from '@civ-clone/core-rule/RuleRegistry';
+import Turn from '@civ-clone/core-turn-based-game/Turn';
+import UnitRegistry from '@civ-clone/core-unit/UnitRegistry';
 import Tile from '@civ-clone/core-world/Tile';
 import TileImprovement from '@civ-clone/core-tile-improvement/TileImprovement';
 import Unit from '@civ-clone/core-unit/Unit';
@@ -648,5 +651,36 @@ describe('detonatedRules, vetoed', (): void => {
     expect(events).to.deep.equal(['unit:nuclear-detonation']);
     expect(touched).to.deep.equal([]);
     expect(asked).to.equal(1);
+  });
+});
+
+describe('lifecycleRules: stowed', (): void => {
+  it("puts the unit to sleep with the game's own rule registry, turn and unit registry", (): void => {
+    const ruleRegistry = new RuleRegistry(),
+      turn = new Turn(),
+      unitRegistry = new UnitRegistry(),
+      performed: any[] = [],
+      unit = Object.create(Unit.prototype, {
+        tile: { value: () => ({} as Tile) },
+        action: { value: (action: unknown) => performed.push(action) },
+      }) as Unit,
+      [stowed] = lifecycleRules(
+        'civ1-unit',
+        { ruleRegistry, turn, unitRegistry },
+        {
+          ActiveUnit: ActiveUnit as never,
+          InactiveUnit: InactiveUnit as never,
+          removedOnActivate: [Fortified],
+          stowable: [Land, Air],
+          shortfallFactor: 0.5,
+        }
+      ).stowed;
+
+    stowed.process(unit);
+
+    expect(performed).to.have.length(1);
+    expect(performed[0].ruleRegistry()).to.equal(ruleRegistry);
+    expect(performed[0]._turn).to.equal(turn);
+    expect(performed[0]._unitRegistry).to.equal(unitRegistry);
   });
 });
